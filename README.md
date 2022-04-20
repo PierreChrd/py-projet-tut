@@ -54,7 +54,7 @@ pip install -r requirements.txt
 
 ## Démonstration et expliquations
 
-```cmd
+```bash
  ____  ____   ___      _ _____ _____   _____ _   _ _____ ______   __
 |  _ \|  _ \ / _ \    | | ____|_   _| |_   _| | | |_   _|  _ \ \ / /
 | |_) | |_) | | | |_  | |  _|   | |     | | | | | | | | | |_) \ V /
@@ -70,7 +70,7 @@ Entrer une adresse IP (l'adresse IP de cette machine est par défaut :
 Le scan du réseau commence alors à ce moment là. Il va nous montrer tous les hôtes qui seront UP (cela se rapproche à la commande `netdiscover` disponible sur [Kali Linux](https://www.kali.org/)).
 
 
-```cmd
+```bash
 Scan réseau en cours ...
 ==================================================
 Hôte    192.168.1.1
@@ -81,7 +81,7 @@ Hôte    192.168.1.125
 Suite au scan complet du réseau, le script va lancer un scan Nmap (paramètres du scan : `-sV --script="vuln and safe"`) sur chaque hôte.
 
 Premier hôte :
-```cmd
+```bash
 Début du scan Nmap pour :       192.168.1.1.
 ==================================================
 PORT: 135
@@ -115,7 +115,7 @@ PORT: 3306
 ```
 
 Deuxième hôte:
-```cmd
+```bash
 PORT: 80
 | NAME: http
 | PRODUCT: Apache httpd
