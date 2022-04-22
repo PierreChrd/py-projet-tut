@@ -8,10 +8,10 @@
 ```
 ## Présentation
 
-Script Python (réalisé par Pierre Chaussard) qui a pour bout d'automatiser le scan d'un réseau et de découvrire toutes les vulnérabilités des hôtes présents sur ce réseau.
-Si le port 23 du protocole SSH (Secure Shell) est ouvert, le script lance un bruteforce pour tenter d'optenir les identifiants de connexion pour établir une connexion SSH.
+Script Python (réalisé par Pierre Chaussard) qui a pour bout d'automatiser le scan d'un réseau et de découvrir toutes les vulnérabilités des hôtes présents sur ce réseau.
+Si le port 22 du protocole SSH (Secure Shell) est ouvert, le script lance un bruteforce pour tenter d'obtenir les identifiants de connexion pour établir une connexion SSH.
 
-Ce script est réalisé dans le cadre d'un exercice du cours de Projet Tuteuré administré par Monsieur BISSORT à l'EFREI.
+Ce script est réalisé dans le cadre d'un exercice du cours de Projet Tuteuré administré par Monsieur BISSOR à l'EFREI.
 
 ## Fonctionnalitées
 
@@ -20,9 +20,9 @@ Ce script est réalisé dans le cadre d'un exercice du cours de Projet Tuteuré 
 </p>
 
 - Scan du réseau et identifie tous les hôtes.
-- Scan des ports de chacuns des hôtes précédement découvert (scan de vulnérabilités avec Nmap).
+- Scan des ports de chacun des hôtes précédemment découvert (scan de vulnérabilités avec Nmap).
 - Analyse des vulnérabilités via les codes CVE-20XX-XXXX.
-- Bruteforce SSH si le port 23 est ouvert.
+- Bruteforce SSH si le port 22 est ouvert.
 
 ### Disclaimer
 Cet outil ne peut être utilisé qu'à des fins légales. Les utilisateurs assument l'entière responsabilité de toute action effectuée à l'aide de cet outil. L'auteur décline toute responsabilité pour les dommages causés par cet outil. Si ces termes ne vous conviennent pas, n'utilisez pas cet outil.
@@ -49,7 +49,7 @@ pip install -r requirements.txt
         ```
 2. Entrez une adresse IP connue sur le réseau que vous souhaitez scanner **ou** appuyez sur ENTRER (cela utilisera votre adresse IP locale).
 3. Entrez le code CVE qui s'affichera à la fin de l'analyse Nmap.
-4. Vous trouverez dans le dossier `scan/`, des fichiers de journalisations JSON (logs) de l'analyse Nmap de tous les hôtes deja scannés.
+4. Vous trouverez dans le dossier `scan/`, des fichiers de journalisations JSON (logs) de l'analyse Nmap de tous les hôtes déjà scannés.
 5. Vous trouverez dans le dossier `cve/`, le résumé du rapport CVE au format JSON.
 
 ## Démonstration et expliquations
@@ -67,7 +67,7 @@ Entrer une adresse IP (l'adresse IP de cette machine est par défaut :
 >
 ```
 
-Le scan du réseau commence alors à ce moment là. Il va nous montrer tous les hôtes qui seront UP (cela se rapproche à la commande `netdiscover` disponible sur [Kali Linux](https://www.kali.org/)).
+Le scan du réseau commence alors à ce moment-là. Il va nous montrer tous les hôtes qui seront UP (cela se rapproche à la commande `netdiscover` disponible sur [Kali Linux](https://www.kali.org/)).
 
 
 ```
@@ -78,52 +78,46 @@ Hôte    192.168.1.125
 ==================================================
 ```
 
-Suite au scan complet du réseau, le script va lancer un scan Nmap (paramètres du scan : `-sV --script="vuln and safe"`) sur chaque hôte.
+Suite au scan complet du réseau, le script va lancer un scan Nmap sur chaque hôte.
+
+Paramètres du scan :
+- `-sV` : Sonde les ports ouverts pour déterminer les informations de service/version.
+- `-p 20-450` : Analyser uniquement les ports spécifiés (du 22 au 450).
+- `--script="vuln and safe"` : Utilise un script qui analyse les vulnérabilités d'un service.
 
 Premier hôte :
 ```
-Début du scan Nmap pour :       192.168.1.1.
-==================================================
-PORT: 135
-| NAME: msrpc
-| PRODUCT: Microsoft Windows RPC
-| SCRIPT:
-| STATE: open
-|_VERSION:
-==================================================
-PORT: 139
-| NAME: netbios-ssn
-| PRODUCT: Microsoft Windows netbios-ssn
-| SCRIPT:
-| STATE: open
-|_VERSION:
-==================================================
-PORT: 445
-| NAME: microsoft-ds
-| PRODUCT:
-| SCRIPT:
-| STATE: open
-|_VERSION:
-==================================================
-PORT: 3306
-| NAME: mysql
-| PRODUCT: MySQL
-| SCRIPT:
-| STATE: open
-|_VERSION:
-==================================================
+Début du scan Nmap pour :       192.168.56.1      
+PORT    STATE   SERVICE
+22/tcp  open    ssh
+| Product: sshd
+| Script:
+| Version:
+135/tcp open    msrpc
+| Product: Microsoft Windows RPC
+| Script:
+| Version:
+139/tcp open    netbios-ssn
+| Product: Microsoft Windows netbios-ssn
+| Script:
+| Version:
+445/tcp open    microsoft-ds
+| Product:
+| Script:
+| Version:
+
+Analyse Nmap finie pour 192.168.56.1: 1 hôte scanné en 79.06s.
 ```
 
-Deuxième hôte:
+Deuxième hôte :
 ```
-Début du scan Nmap pour :       192.168.1.125.
-==================================================
-PORT: 80
-| NAME: http
-| PRODUCT: Apache httpd
-| SCRIPT:
-| | HTTP-SERVER-HEADER: Apache/2.4.46 (Win64) PHP/7.3.21
-| | HTTP-SLOWLORIS-CHECK:
+Début du scan Nmap pour :       192.168.1.125     
+PORT    STATE   SERVICE
+80/tcp  open    http
+| Product: Apache httpd
+| Script:
+| | http-server-header: Apache/2.4.46 (Win64) PHP/7.3.21
+| | http-slowloris-check:
   VULNERABLE:
   Slowloris DOS attack
     State: LIKELY VULNERABLE
@@ -135,12 +129,12 @@ PORT: 80
 
     Disclosure date: 2009-09-17
     References:
-      https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2007-6750
       http://ha.ckers.org/slowloris/
+      https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2007-6750
 
-| | HTTP-TRACE: TRACE is enabled
-| | HTTP-VULN-CVE2017-1001000: ERROR: Script execution failed (use -d to debug)
-| | VULNERS:
+| | http-trace: TRACE is enabled
+| | http-vuln-cve2017-1001000: ERROR: Script execution failed (use -d to debug)
+| | vulners:
   cpe:/a:apache:http_server:2.4.46:
         E899CC4B-A3FD-5288-BB62-A4201F93FDCC    10.0    https://vulners.com/githubexploit/E899CC4B-A3FD-5288-BB62-A4201F93FDCC  *EXPLOIT*
         5DE1B404-0368-5986-856A-306EA0FE0C09    10.0    https://vulners.com/githubexploit/5DE1B404-0368-5986-856A-306EA0FE0C09  *EXPLOIT*
@@ -165,12 +159,44 @@ PORT: 80
         CVE-2020-9490   5.0     https://vulners.com/cve/CVE-2020-9490
         CVE-2020-13950  5.0     https://vulners.com/cve/CVE-2020-13950
         CVE-2019-17567  5.0     https://vulners.com/cve/CVE-2019-17567
-| STATE: open
-|_VERSION: 2.4.46
-==================================================
+| Version: 2.4.46
+135/tcp open    msrpc
+| Product: Microsoft Windows RPC
+| Script:
+| Version:
+139/tcp open    netbios-ssn
+| Product: Microsoft Windows netbios-ssn
+| Script:
+| Version:
+
+Analyse Nmap finie pour 192.168.1.125: 1 hôte scanné en 117.03s.
+
 ```
 
-Ici, on remarque que le script `'vuln and safe'` a trouvé une vulnérabilité.
+Ici, on remarque que le script `"vuln and safe"` a trouvé une vulnérabilité.
+
+```
+Saisissez un code CVE pour votre recherche:
+>CVE-2007-6750
+```
+
+Suite à cela, le script vous demandera le code CVE pour vous ressortir le résultat correspondant à ce code au format JSON dans le dossier `cve/`.
+
+
+De plus, comme le port SSH (22) est ouvert sur le premier hôte, le script va lancer un bruteforce. Il vous sera demandé de fournir un nom d'utilisateur (identifiant de connexion pour le SSH, dans cet exemple ça sera `username`) ainsi qu'un dictionnaire de mots de passe (nous utiliserons une version allégée du dictionnaire `rockyou.txt`).
+
+```
+PORT 22 OUVERT
+Entrer un nom d'utilisateur :
+>username
+Entrer un dictionnaire de mots de passe (juste le nom du fichier, sans l'extension) :
+>rockyou
+```
+Si un mot de passe est trouvé, il vous le retournera (comme ci-dessous).
+
+```
+Mot de passe trouvé : password123
+```
 
 ##### Développé par [Pierre Chaussard](https://github.com/PierreChrd/).
 ###### Autres ressources : [PyCVESearch](https://github.com/cve-search/PyCVESearch).
