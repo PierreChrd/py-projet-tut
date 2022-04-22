@@ -1,4 +1,3 @@
 pycvesearch
 python-nmap
 pyfiglet
-socket
