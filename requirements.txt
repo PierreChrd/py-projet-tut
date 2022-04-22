@@ -1,3 +1,4 @@
 pycvesearch
 python-nmap
 pyfiglet
+paramiko
