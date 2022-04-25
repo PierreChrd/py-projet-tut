@@ -1,19 +1,19 @@
 #!/usr/bin/env python
-# 
+#
 # Projet Tuteuré Version 1.0.3 (2022)
 #
 # This tool may be used for legal purposes only.  Users take full responsibility
 # for any actions performed using this tool. The author accepts no liability for
-# damage caused by this tool.  If these terms are not acceptable to you, then do 
+# damage caused by this tool.  If these terms are not acceptable to you, then do
 # not use this tool.
-# 
+#
 # by Pierre CHAUSSARD
-# 
+#
 # 19-Mar-2022 - 1.0.0 - [ADD] Basic script.
 # 20-Mar-2022 - 1.0.1 - [ADD] Network & Nmap scan.
 # 21-Mar-2022 - 1.0.2 - [ADD] Json reader.
 # 22-Mar-2022 - 1.0.3 - [ADD] SSH bruteforce.
-# 
+#
 
 import nmap, socket, json, pyfiglet, paramiko, sys
 from pycvesearch import CVESearch
@@ -24,11 +24,11 @@ from threading import Thread
 class Network(object):
     def __init__(self):
         print(pyfiglet.figlet_format("PROJET TUT.PY"))
-        self.ip = input(f"Entrer une adresse IP (l'adresse IP de cette machine est par défaut :\n{socket.gethostbyname(socket.gethostname())}, pour la selectionner appuyez sur ENTRER).\n>")
+        self.ip = input(f"Entrer une adresse IP avec CIDR (l'adresse IP de cette machine est par défaut :\n{socket.gethostbyname(socket.gethostname())}, pour la selectionner appuyez sur ENTRER).\n>")
         self.hosts = []
         self.nm = nmap.PortScanner()
         self.cve = CVESearch()
-    
+
     def section_print(self, title):
         print("\n" + "=" * 50)
         print(title)
@@ -38,8 +38,8 @@ class Network(object):
         if len(self.ip) == 0:
             network = f"{socket.gethostbyname(socket.gethostname())}/24"
         else:
-            network = self.ip + '/24'
-        
+            network = self.ip
+
         print("\nScan réseau en cours ...")
         self.nm.scan(hosts = network, arguments = "-sn")
         hosts_list = [(x, self.nm[x]['status']['state']) for x in self.nm.all_hosts()]
@@ -50,7 +50,7 @@ class Network(object):
             self.hosts.append(host)
         print("=" * 50)
         # print(hosts_list)
-    
+
     def nmap_scan(self, host):
         print(f"\nDébut du scan Nmap pour :\t{host}")
         scan_result = self.nm.scan(hosts = host, arguments = '-sV -p 20-450 --script="vuln and safe"')
@@ -58,7 +58,7 @@ class Network(object):
 
         with open(f"scan/{host}.json", "w", encoding = "utf-8") as f:
             f.write(json.dumps(scan_result, indent = 4, sort_keys = True))
-    
+
     def read_json_scan(self, ip):
         with open(f"scan/{ip}.json", "r", encoding = "utf-8") as f:
             arr = []
@@ -87,7 +87,7 @@ class Network(object):
                 f.write(json.dumps(cve_result, indent = 4, sort_keys = True))
         except:
             pass
-    
+
     def ssh_connect(ip, username, password, port = 22):
         try:
             ssh = paramiko.SSHClient()
@@ -129,6 +129,6 @@ if __name__ == "__main__":
     try:
         Nscan = Network()
         Nscan.projet_tut()
-    except KeyboardInterrupt:  
+    except KeyboardInterrupt:
         print("\n[x] Fermeture du programme !")
         sys.exit()
