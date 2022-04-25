@@ -39,6 +39,8 @@ git clone https://github.com/PierreChrd/projet-tut
 pip install -r requirements.txt
 ```
 
+3. Téléchargez Nmap sur le site officiel : https://nmap.org/download.html
+
 ## Utilisation
 
 1. Lancez le script :
