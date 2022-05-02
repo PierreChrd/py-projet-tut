@@ -9,7 +9,7 @@
 ## Présentation
 
 Script Python (réalisé par Pierre Chaussard) qui a pour bout d'automatiser le scan d'un réseau et de découvrir toutes les vulnérabilités des hôtes présents sur ce réseau.
-Si le port 22 du protocole SSH (Secure Shell) est ouvert, le script lance un bruteforce pour tenter d'obtenir les identifiants de connexion pour établir une connexion SSH.
+Si le port 22 du protocole SSH (Secure Shell) est ouvert, le script lance un bruteforce pour tenter d'obtenir les identifiants de connexion pour établir une connexion SSH (pareil pour le protocole FTP si le port 21 est ouvert).
 
 Ce script est réalisé dans le cadre d'un exercice du cours de Projet Tuteuré administré par Monsieur BISSOR à l'EFREI.
 
@@ -23,6 +23,7 @@ Ce script est réalisé dans le cadre d'un exercice du cours de Projet Tuteuré 
 - Scan des ports de chacun des hôtes précédemment découvert (scan de vulnérabilités avec Nmap).
 - Analyse des vulnérabilités via les codes CVE-20XX-XXXX.
 - Bruteforce SSH si le port 22 est ouvert.
+- Bruteforce FTP si le port 21 est ouvert.
 
 ### Disclaimer
 Cet outil ne peut être utilisé qu'à des fins légales. Les utilisateurs assument l'entière responsabilité de toute action effectuée à l'aide de cet outil. L'auteur décline toute responsabilité pour les dommages causés par cet outil. Si ces termes ne vous conviennent pas, n'utilisez pas cet outil.
@@ -38,8 +39,6 @@ git clone https://github.com/PierreChrd/projet-tut
 ```bash
 pip install -r requirements.txt
 ```
-
-3. Téléchargez Nmap sur le site officiel : https://nmap.org/download.html
 
 ## Utilisation
 
