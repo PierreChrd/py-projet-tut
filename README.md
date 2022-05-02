@@ -74,8 +74,8 @@ Le scan du réseau commence alors à ce moment-là. Il va nous montrer tous les 
 ```
 Scan réseau en cours ...
 ==================================================
-Hôte    192.168.1.1
-Hôte    192.168.1.125
+Hôte    192.168.1.1     up
+Hôte    192.168.1.125   up
 ==================================================
 ```
 
